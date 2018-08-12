@@ -1,0 +1,155 @@
+swagger: '2.0'
+
+info:
+  title: User API
+  description: User data
+  version: "1.0.0"
+
+#host: users.dialogue.co
+
+schemes:
+  - https
+
+basePath: /v1
+
+produces:
+  - application/json
+
+paths:
+
+  /patients:
+    get:
+      operationId: controllers.patient_controller.patient_get
+      summary: Get paginated patient profiles
+      responses:
+        200:
+          description: |
+            Get a page of 10 patient profiles with the link for next page.
+          schema:
+            type: object
+            required:
+              - data
+              - links
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/definitions/patient'
+              links:
+                $ref: '#/definitions/pagination'
+
+    post:
+      operationId: controllers.patient_controller.patients_post
+      summary: Creates a patient profile
+      responses:
+        201:
+          description: A patient profile.
+          schema:
+            $ref: '#/definitions/patient'
+        400:
+          description: For any required field missing or badly formatted.
+          schema:
+            $ref: '#/definitions/http-error'
+        409:
+          description: For email duplicates
+          schema:
+            $ref: '#/definitions/http-error'
+      parameters:
+        - name: body
+          in: body
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                $ref: '#/definitions/patient'
+
+  /patients/{id}:
+    get:
+      operationId: controllers.patient_controller.patient_id_get
+      summary: Get a patient profile
+      parameters:
+        - name: id
+          in: path
+          description: the patient id
+          required: true
+          type: integer
+      responses:
+        200:
+          description: patient profile
+          schema:
+            $ref: '#/definitions/patient'
+        404:
+          description: not found
+          schema:
+            $ref: '#/definitions/http-error'
+
+definitions:
+
+  pagination:
+    type: object
+    required:
+      - self
+      - next
+    properties:
+      self:
+        type: string
+        description: Canonical URL of the current page
+      next:
+        type: string
+        description: URL of next page
+
+  patient:
+    type: object
+    required:
+      - attributes
+    properties:
+      attributes:
+        type: object
+        required:
+          - email
+          - first_name
+          - last_name
+          - birthdate
+          - sex
+        properties:
+          email:
+            type: string
+          first_name:
+            type: string
+          last_name:
+            type: string
+          birthdate:
+            type: string
+            format: date
+          sex:
+            type: string
+
+  http-error:
+    type: object
+    properties:
+      errors:
+        type: array
+        items:
+          type: object
+          properties:
+            id:
+              type: string
+              description: Request unique identifier .
+            status:
+              type: string
+              description: HTTP status code.
+            title:
+              type: string
+              description: HTTP status.
+            detail:
+              type: string
+              description: Human readable detail.
+            code:
+              type: string
+              description: An error code unique to the error case.
+            source:
+              type: object
+              x-nullable: true
+              description: An object which gives more info specific to error.
